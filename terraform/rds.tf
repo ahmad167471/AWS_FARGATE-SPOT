@@ -2,19 +2,6 @@
 # rds.tf – Fully fixed for default VPC deployment
 ##########################################################
 
-# Fetch the default VPC
-data "aws_vpc" "default" {
-  default = true
-}
-
-# Fetch all subnets in the default VPC
-data "aws_subnets" "default" {
-  filter {
-    name   = "vpc-id"
-    values = [data.aws_vpc.default.id]
-  }
-}
-
 ##########################################################
 # DB Subnet Group
 ##########################################################
@@ -41,7 +28,7 @@ resource "aws_security_group" "rds_sg" {
     from_port       = 5432
     to_port         = 5432
     protocol        = "tcp"
-    security_groups = [aws_security_group.ecs_sg.id]
+    security_groups = [aws_security_group.ecs_sg.id]  # Make sure ecs_sg exists
   }
 
   # Outbound to anywhere
