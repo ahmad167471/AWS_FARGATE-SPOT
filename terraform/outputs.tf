@@ -9,3 +9,7 @@ output "rds_endpoint" {
 output "ecs_cluster_name" {
   value = aws_ecs_cluster.ahmad_cluster.name
 }
+output "alb_dns_name" {
+  description = "Public URL of the ALB"
+  value       = aws_lb.ecs_alb.dns_name
+}

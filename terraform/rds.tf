@@ -1,13 +1,17 @@
 ##########################################################
-# rds.tf – Fixed for new VPC deployment
+# rds.tf – Fully Fixed for New VPC Deployment
 ##########################################################
 
 ##########################################################
-# DB Subnet Group
+# DB Subnet Group (MUST use PRIVATE subnets)
 ##########################################################
 resource "aws_db_subnet_group" "db_subnet_group" {
-  name       = "ahmad-db-subnet-group"
-  subnet_ids = [aws_subnet.ahmad_subnet_1.id, aws_subnet.ahmad_subnet_2.id]  # reference new subnets
+  name = "ahmad-db-subnet-group"
+
+  subnet_ids = [
+    aws_subnet.private_subnet_1.id,
+    aws_subnet.private_subnet_2.id
+  ]
 
   tags = {
     Name = "ahmad-db-subnet-group"
@@ -21,17 +25,17 @@ resource "aws_db_subnet_group" "db_subnet_group" {
 resource "aws_security_group" "rds_sg" {
   name        = "ahmad-rds-sg"
   description = "Allow ECS to connect to RDS"
-  vpc_id      = aws_vpc.ahmad_vpc.id  # reference new VPC
+  vpc_id      = aws_vpc.ahmad_vpc.id
 
-  # Allow ECS SG to access Postgres (5432)
+  # Allow ECS security group to access PostgreSQL
   ingress {
     from_port       = 5432
     to_port         = 5432
     protocol        = "tcp"
-    security_groups = [aws_security_group.ecs_sg.id]  # Make sure ecs_sg exists
+    security_groups = [aws_security_group.ecs_sg.id]
   }
 
-  # Outbound to anywhere
+  # Allow outbound traffic
   egress {
     from_port   = 0
     to_port     = 0
@@ -46,24 +50,37 @@ resource "aws_security_group" "rds_sg" {
 }
 
 ##########################################################
-# RDS Instance
+# RDS PostgreSQL Instance
 ##########################################################
 resource "aws_db_instance" "ahmad_db" {
-  identifier              = "ahmad-db"
-  engine                  = "postgres"
-  instance_class          = "db.t3.micro"
-  allocated_storage       = 20
-  db_name                 = "strapi"
-  username                = var.db_username
-  password                = var.db_password
-  skip_final_snapshot     = true
-  multi_az                = false
+  identifier = "ahmad-db"
+
+  engine         = "postgres"
+  engine_version = "15.5"
+  instance_class = "db.t3.micro"
+
+  allocated_storage = 20
+  storage_type      = "gp2"
+
+  db_name  = "strapi"
+  username = var.db_username
+  password = var.db_password
+
+  db_subnet_group_name   = aws_db_subnet_group.db_subnet_group.name
+  vpc_security_group_ids = [aws_security_group.rds_sg.id]
+
   publicly_accessible     = false
-  db_subnet_group_name    = aws_db_subnet_group.db_subnet_group.name
-  vpc_security_group_ids  = [aws_security_group.rds_sg.id]
+  multi_az                = false
+  backup_retention_period = 7
+  deletion_protection     = false
+  skip_final_snapshot     = true
 
   tags = {
     Name = "ahmad-db"
     Env  = "dev"
   }
+
+  depends_on = [
+    aws_db_subnet_group.db_subnet_group
+  ]
 }
