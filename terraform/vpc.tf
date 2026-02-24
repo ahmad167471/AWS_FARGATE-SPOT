@@ -84,14 +84,3 @@ resource "aws_route_table_association" "subnet2_assoc" {
   subnet_id      = aws_subnet.ahmad_subnet_2.id
   route_table_id = aws_route_table.ahmad_public_rt.id
 }
-
-########################################
-# Output VPC and Subnets
-########################################
-output "vpc_id" {
-  value = aws_vpc.ahmad_vpc.id
-}
-
-output "subnet_ids" {
-  value = [aws_subnet.ahmad_subnet_1.id, aws_subnet.ahmad_subnet_2.id]
-}

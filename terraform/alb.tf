@@ -92,11 +92,3 @@ resource "aws_lb_listener" "ecs_listener" {
     target_group_arn = aws_lb_target_group.ecs_tg.arn
   }
 }
-
-########################################
-# Output
-########################################
-output "alb_dns_name" {
-  description = "Public URL of the ALB"
-  value       = aws_lb.ecs_alb.dns_name
-}
