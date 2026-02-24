@@ -7,13 +7,13 @@ resource "aws_ecs_cluster" "ahmad_cluster" {
 }
 
 ##########################################################
-# ECS SECURITY GROUP (FIXED - Using NEW VPC)
+# ECS SECURITY GROUP
 ##########################################################
 
 resource "aws_security_group" "ecs_sg" {
   name        = "ahmad-ecs-sg"
   description = "Allow ALB to access ECS"
-  vpc_id      = aws_vpc.ahmad_vpc.id   # ✅ FIXED
+  vpc_id      = aws_vpc.ahmad_vpc.id
 
   ingress {
     from_port       = 1337
@@ -66,7 +66,7 @@ resource "aws_ecs_task_definition" "ahmad_task" {
         { name = "DATABASE_NAME",     value = "strapi" },
         { name = "DATABASE_USERNAME", value = var.db_username },
         { name = "DATABASE_PASSWORD", value = var.db_password },
-        { name = "DATABASE_SSL",      value = "false" },   # safer inside VPC
+        { name = "DATABASE_SSL",      value = "false" },
         { name = "APP_KEYS",          value = "key1,key2,key3,key4" },
         { name = "API_TOKEN_SALT",    value = "randomsalt123" },
         { name = "ADMIN_JWT_SECRET",  value = "adminjwtsecret123" },
@@ -102,12 +102,12 @@ resource "aws_ecs_service" "ahmad_service" {
 
   network_configuration {
     subnets = [
-      aws_subnet.private_subnet_1.id,
-      aws_subnet.private_subnet_2.id
-    ]                                   # ✅ FIXED
+      aws_subnet.ahmad_subnet_1.id,
+      aws_subnet.ahmad_subnet_2.id
+    ]
 
     security_groups  = [aws_security_group.ecs_sg.id]
-    assign_public_ip = false             # ✅ IMPORTANT
+    assign_public_ip = true   # IMPORTANT because you have no NAT
   }
 
   depends_on = [
