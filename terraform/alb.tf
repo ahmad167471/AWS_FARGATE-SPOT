@@ -1,7 +1,23 @@
+##########################################################
+# alb.tf – Fixed for default VPC deployment
+##########################################################
+
+# Fetch the default VPC
+data "aws_vpc" "default" {
+  default = true
+}
+
+# Fetch all subnets in the default VPC
+data "aws_subnets" "default" {
+  filter {
+    name   = "vpc-id"
+    values = [data.aws_vpc.default.id]
+  }
+}
+
 ########################################
 # ALB Security Group
 ########################################
-
 resource "aws_security_group" "alb_sg" {
   name        = "ahmad-ecs-alb-sg"
   description = "Allow HTTP traffic to ALB"
@@ -20,12 +36,16 @@ resource "aws_security_group" "alb_sg" {
     protocol    = "-1"
     cidr_blocks = ["0.0.0.0/0"]
   }
+
+  tags = {
+    Name = "ahmad-ecs-alb-sg"
+    Env  = "dev"
+  }
 }
 
 ########################################
 # Application Load Balancer
 ########################################
-
 resource "aws_lb" "ecs_alb" {
   name               = "ahmad-ecs-alb"
   load_balancer_type = "application"
@@ -33,12 +53,16 @@ resource "aws_lb" "ecs_alb" {
   security_groups    = [aws_security_group.alb_sg.id]
 
   enable_deletion_protection = false
+
+  tags = {
+    Name = "ahmad-ecs-alb"
+    Env  = "dev"
+  }
 }
 
 ########################################
 # Target Group
 ########################################
-
 resource "aws_lb_target_group" "ecs_tg" {
   name        = "ahmad-ecs-tg"
   port        = 1337
@@ -54,12 +78,16 @@ resource "aws_lb_target_group" "ecs_tg" {
     healthy_threshold   = 2
     unhealthy_threshold = 2
   }
+
+  tags = {
+    Name = "ahmad-ecs-tg"
+    Env  = "dev"
+  }
 }
 
 ########################################
 # Listener
 ########################################
-
 resource "aws_lb_listener" "ecs_listener" {
   load_balancer_arn = aws_lb.ecs_alb.arn
   port              = 80
@@ -74,7 +102,6 @@ resource "aws_lb_listener" "ecs_listener" {
 ########################################
 # Output ALB DNS
 ########################################
-
 output "alb_dns_name" {
   description = "Public URL of the ALB"
   value       = aws_lb.ecs_alb.dns_name

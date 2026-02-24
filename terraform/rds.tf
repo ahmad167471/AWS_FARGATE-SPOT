@@ -1,14 +1,42 @@
+##########################################################
+# rds.tf – Fully fixed for default VPC deployment
+##########################################################
+
+# Fetch the default VPC
+data "aws_vpc" "default" {
+  default = true
+}
+
+# Fetch all subnets in the default VPC
+data "aws_subnets" "default" {
+  filter {
+    name   = "vpc-id"
+    values = [data.aws_vpc.default.id]
+  }
+}
+
+##########################################################
+# DB Subnet Group
+##########################################################
 resource "aws_db_subnet_group" "db_subnet_group" {
   name       = "ahmad-db-subnet-group"
   subnet_ids = data.aws_subnets.default.ids
+
+  tags = {
+    Name = "ahmad-db-subnet-group"
+    Env  = "dev"
+  }
 }
 
-#fixed
+##########################################################
+# Security Group for RDS
+##########################################################
 resource "aws_security_group" "rds_sg" {
   name        = "ahmad-rds-sg"
   description = "Allow ECS to connect to RDS"
   vpc_id      = data.aws_vpc.default.id
 
+  # Allow ECS SG to access Postgres (5432)
   ingress {
     from_port       = 5432
     to_port         = 5432
@@ -16,14 +44,23 @@ resource "aws_security_group" "rds_sg" {
     security_groups = [aws_security_group.ecs_sg.id]
   }
 
+  # Outbound to anywhere
   egress {
     from_port   = 0
     to_port     = 0
     protocol    = "-1"
     cidr_blocks = ["0.0.0.0/0"]
   }
+
+  tags = {
+    Name = "ahmad-rds-sg"
+    Env  = "dev"
+  }
 }
 
+##########################################################
+# RDS Instance
+##########################################################
 resource "aws_db_instance" "ahmad_db" {
   identifier              = "ahmad-db"
   engine                  = "postgres"
@@ -37,4 +74,9 @@ resource "aws_db_instance" "ahmad_db" {
   publicly_accessible     = false
   db_subnet_group_name    = aws_db_subnet_group.db_subnet_group.name
   vpc_security_group_ids  = [aws_security_group.rds_sg.id]
+
+  tags = {
+    Name = "ahmad-db"
+    Env  = "dev"
+  }
 }
