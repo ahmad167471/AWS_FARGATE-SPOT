@@ -1,5 +1,5 @@
 ##########################################################
-# alb.tf – Clean version for new VPC deployment
+# alb.tf – Fixed for ahmad_vpc setup
 ##########################################################
 
 ########################################
@@ -39,10 +39,13 @@ resource "aws_lb" "ecs_alb" {
   name               = "ahmad-ecs-alb"
   load_balancer_type = "application"
   internal           = false
-  subnets            = [
-    aws_subnet.public_1.id,
-    aws_subnet.public_2.id
+
+  # ✅ FIXED SUBNET REFERENCES
+  subnets = [
+    aws_subnet.ahmad_subnet_1.id,
+    aws_subnet.ahmad_subnet_2.id
   ]
+
   security_groups = [aws_security_group.alb_sg.id]
 
   enable_deletion_protection = false
