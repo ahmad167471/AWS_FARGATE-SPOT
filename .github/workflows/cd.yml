@@ -1,19 +1,18 @@
-name: CD - Create Infrastructure
+name: CD - Deploy Infrastructure
 
 on:
-  workflow_run:
-    workflows: ["CI - Build & Push Image"]
-    types:
-      - completed
+  workflow_dispatch:
+    inputs:
+      image_url:
+        description: "Docker image URL"
+        required: true
 
 jobs:
-  infra:
-    if: ${{ github.event.workflow_run.conclusion == 'success' }}
+  deploy:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout Code
-        uses: actions/checkout@v3
+      - uses: actions/checkout@v3
 
       - name: Configure AWS
         uses: aws-actions/configure-aws-credentials@v3
@@ -22,8 +21,7 @@ jobs:
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           aws-region: us-east-1
 
-      - name: Setup Terraform
-        uses: hashicorp/setup-terraform@v3
+      - uses: hashicorp/setup-terraform@v3
 
       - name: Terraform Init
         working-directory: terraform
@@ -31,4 +29,6 @@ jobs:
 
       - name: Terraform Apply
         working-directory: terraform
-        run: terraform apply -auto-approve
+        run: |
+          terraform apply -auto-approve \
+            -var="image_url=${{ github.event.inputs.image_url }}"
