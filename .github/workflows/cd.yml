@@ -1,17 +1,15 @@
 name: CD - Create Infrastructure
 
 on:
-  push:
-    branches:
-      - main
+  workflow_run:
+    workflows: ["CI - Build & Push Image"]
+    types:
+      - completed
 
 jobs:
   infra:
+    if: ${{ github.event.workflow_run.conclusion == 'success' }}
     runs-on: ubuntu-latest
-
-    env:
-      TF_VAR_vpc_id: ${{ secrets.VPC_ID }}
-      TF_VAR_image_url: dummy
 
     steps:
       - name: Checkout Code
@@ -29,11 +27,7 @@ jobs:
 
       - name: Terraform Init
         working-directory: terraform
-        run: terraform init
-
-      - name: Terraform Plan
-        working-directory: terraform
-        run: terraform plan
+        run: terraform init -reconfigure
 
       - name: Terraform Apply
         working-directory: terraform

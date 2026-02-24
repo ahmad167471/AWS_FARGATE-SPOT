@@ -1,5 +1,5 @@
 ##########################################################
-# rds.tf – Fixed for default VPC deployment
+# rds.tf – Fixed for new VPC deployment
 ##########################################################
 
 ##########################################################
@@ -7,7 +7,7 @@
 ##########################################################
 resource "aws_db_subnet_group" "db_subnet_group" {
   name       = "ahmad-db-subnet-group"
-  subnet_ids = data.aws_subnets.default.ids   # use data from vpc.tf
+  subnet_ids = [aws_subnet.ahmad_subnet_1.id, aws_subnet.ahmad_subnet_2.id]  # reference new subnets
 
   tags = {
     Name = "ahmad-db-subnet-group"
@@ -21,7 +21,7 @@ resource "aws_db_subnet_group" "db_subnet_group" {
 resource "aws_security_group" "rds_sg" {
   name        = "ahmad-rds-sg"
   description = "Allow ECS to connect to RDS"
-  vpc_id      = data.aws_vpc.default.id      # use data from vpc.tf
+  vpc_id      = aws_vpc.ahmad_vpc.id  # reference new VPC
 
   # Allow ECS SG to access Postgres (5432)
   ingress {
