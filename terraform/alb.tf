@@ -60,7 +60,7 @@ resource "aws_lb" "ecs_alb" {
 # Target Group
 ########################################
 resource "aws_lb_target_group" "ecs_tg" {
-  name        = "ahmad-ecs-tg"
+  name        = "ahmad-ecs-tg-1"
   port        = 1337
   protocol    = "HTTP"
   vpc_id      = aws_vpc.ahmad_vpc.id

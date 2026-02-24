@@ -55,7 +55,7 @@ resource "aws_db_instance" "ahmad_db" {
   identifier = "ahmad-db"
 
   engine         = "postgres"
-  engine_version = "15.5"
+  engine_version = "15"
   instance_class = "db.t3.micro"
 
   allocated_storage = 20
