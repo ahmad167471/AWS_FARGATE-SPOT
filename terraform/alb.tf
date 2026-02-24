@@ -2,26 +2,13 @@
 # alb.tf – Fixed for default VPC deployment
 ##########################################################
 
-# Fetch the default VPC
-data "aws_vpc" "default" {
-  default = true
-}
-
-# Fetch all subnets in the default VPC
-data "aws_subnets" "default" {
-  filter {
-    name   = "vpc-id"
-    values = [data.aws_vpc.default.id]
-  }
-}
-
 ########################################
 # ALB Security Group
 ########################################
 resource "aws_security_group" "alb_sg" {
   name        = "ahmad-ecs-alb-sg"
   description = "Allow HTTP traffic to ALB"
-  vpc_id      = data.aws_vpc.default.id
+  vpc_id      = data.aws_vpc.default.id  # reference VPC from vpc.tf
 
   ingress {
     from_port   = 80
@@ -49,7 +36,7 @@ resource "aws_security_group" "alb_sg" {
 resource "aws_lb" "ecs_alb" {
   name               = "ahmad-ecs-alb"
   load_balancer_type = "application"
-  subnets            = data.aws_subnets.default.ids
+  subnets            = data.aws_subnets.default.ids  # reference subnets from vpc.tf
   security_groups    = [aws_security_group.alb_sg.id]
 
   enable_deletion_protection = false
@@ -67,7 +54,7 @@ resource "aws_lb_target_group" "ecs_tg" {
   name        = "ahmad-ecs-tg"
   port        = 1337
   protocol    = "HTTP"
-  vpc_id      = data.aws_vpc.default.id
+  vpc_id      = data.aws_vpc.default.id  # reference VPC from vpc.tf
   target_type = "ip"
 
   health_check {
